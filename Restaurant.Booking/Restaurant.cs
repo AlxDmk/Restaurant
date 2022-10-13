@@ -9,87 +9,48 @@ using System.Timers;
 
 namespace Restaurant.Booking
 {
-    internal class Restaurant
+    public class Restaurant
     {
-        private readonly List<Table> _tables = new();        
-        private readonly object _locker = new();
-        private readonly Producer _producer = new(queueName: "BookingNotification", hostName: "Localhost");
-
+        private readonly List<Table> _tables = new();       
+       
         public Restaurant()
         {
             for (ushort i = 1; i <= 10; i++)
                 _tables.Add(new Table(i));
-
         }
 
-        public void BookFreeTable(int countOfPersons)
+        public bool? BookFreeTable(int countOfPersons)
         {
             Console.WriteLine("Добрый день! Подождите секунду, я подберу столик и подтвержу вашу бронь. Оставайтесь на линии");
-
             var table = _tables.FirstOrDefault(t => t.SeatCount > countOfPersons && t.State == State.Free);
-
-            Thread.Sleep(5000);
-            table?.SetState(State.Booked);
-
-            _producer.Send(table is null
-              ? "К сожалению, сейчас все столики заняты"
-              : $"Готово! Ваш столик номер {table.Id}");
-            
+            Thread.Sleep(5000);   
+                
+            return table?.SetState(State.Booked);
         }
 
-        public void BookFreeTableAsync(int countOfPersons)
+        public async Task<bool?> BookFreeTableAsync(int countOfPersons)
         {
-            Console.WriteLine("Добрый день! Подождите секунду, я подберу столик и подтвержу вашу бронь. Вам придет уведомление!");
-
-            Task.Run(async () =>
-            {
-                Table? table;
-
-                lock (_locker)
-                {
-                    table = _tables.FirstOrDefault(t => t.SeatCount > countOfPersons && t.State == State.Free);
-                    Thread.Sleep(5000);
-                    table?.SetState(State.Booked);
-                }
-
-                _producer.Send(table is null
-                ? "УВЕДОМЛЕНИЕ! К сожалению, сейчас все столики заняты"
-                : $"УВЕДОМЛЕНИЕ! Готово! Ваш столик номер {table.Id}");
-
-                await Task.CompletedTask;
-            });
-
+            Console.WriteLine("Добрый день! Подождите секунду, я подберу столик и подтвержу вашу бронь. Вам придет уведомление!");          
+                              
+            var table = _tables.FirstOrDefault(t => t.SeatCount > countOfPersons && t.State == State.Free);
+            await Task.Delay(5000);
+            return table?.SetState(State.Booked);             
         }
 
-        public void UnsetBooking(int id)
+        public bool? UnsetBooking()
         {
+            Console.WriteLine("Введите номер столика");
+            var id = Convert.ToInt16(Console.ReadLine());
             var table = _tables.FirstOrDefault(t => t.Id == id && t.State == State.Booked);
-            table?.SetState(State.Free);
-
-            _producer.Send(table is null
-                ? $"Точно этот стлик? столик {id} не был забронирован!"
-                : $" Готово! Со столика {table.Id} снята бронь");            
+            return table?.SetState(State.Free);     
         }
 
-        public void UnsetBookingAsync(int id)
+        public async Task<bool?> UnsetBookingAsync()
         {
-            Task.Run(async () =>
-            {
-                Table? table;
-                lock (_locker)
-                {
-                    table = _tables.FirstOrDefault(t => t.Id == id && t.State == State.Booked);
-                    Thread.Sleep(5000);
-                    table?.SetState(State.Free);
-                }
-                _producer.Send(table is null
-                    ? $"УВЕДОМЛЕНИЕ!  Точно этот стлик? столик {id} не был забронирован!"
-                    : $"УВЕДОМЛЕНИЕ!  Готово! Со столика {table.Id} снята бронь");
-
-
-                await Task.CompletedTask;
-            });
-            
+            var id = Convert.ToInt16(Console.ReadLine());
+            var table = _tables.FirstOrDefault(t => t.Id == id && t.State == State.Booked);
+            await Task.Delay(5000);
+            return table?.SetState(State.Free);          
 
         }
 
@@ -100,7 +61,7 @@ namespace Restaurant.Booking
             await Task.Run(() =>
             {
                 Parallel.ForEach(_tables, t => t.SetState(State.Free));
-                _producer.Send("Вся бронь со столиков снята");
+                //_producer.Send("Вся бронь со столиков снята");
 
             });
         }

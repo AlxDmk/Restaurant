@@ -8,6 +8,7 @@ namespace Restaurant.Booking.Models
 {
     public class Table
     {
+        private readonly object _locker = new object();
         public State State { get; private set; }
         public int SeatCount { get; }
         public int Id { get; }
@@ -21,10 +22,13 @@ namespace Restaurant.Booking.Models
 
         public bool SetState(State state)
         {
-            if (state == State)
-                return false;
-            State = state;
-            return true;
+            lock (_locker)
+            {
+                if (state == State)
+                    return false;
+                State = state;
+                return true;
+            }           
         }
     }
 }
