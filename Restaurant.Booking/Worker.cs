@@ -1,6 +1,7 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.Hosting;
 using Restaurant.Messages;
+using Restaurant.Messages.Interfaces;
 using System.Diagnostics;
 using Timer = System.Timers.Timer;
 
@@ -21,26 +22,15 @@ namespace Restaurant.Booking
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             while (!stoppingToken.IsCancellationRequested)
             {
-                Console.WriteLine("Привет! желаете забронировать столик?\n1 - мы уведомим Вас по смс (асинхронно)\n2 - подождите на линии, мы вас оповестим (синхронно)\nЧтобы снять бронь со столика \n3 - мы уведомим вас по смс (асинхронно)\n4 - подождите на линии, мы вас оповестим (синхронно)");
+                Console.WriteLine("Привет! желаете забронировать столик?\n1 - мы уведомим Вас по смс (асинхронно)\n2 - подождите на линии, мы вас оповестим (синхронно)");
 
-                if (!int.TryParse(Console.ReadLine(), out int choice) || (choice - 1) * (4 - choice) < 0)
+                if (!int.TryParse(Console.ReadLine(), out int choice) || (choice - 1) * (2 - choice) < 0)
                 {
-                    Console.WriteLine("Введите, пожалуйста от 1 до 4");
+                    Console.WriteLine("Введите, пожалуйста от 1 до 2");
                     continue;
-                }               
+                }        
 
-                //var result = await _restaraunt.BookFreeTableAsync(1);
-
-
-                var result = choice switch
-                {
-                    1 => await _restaraunt.BookFreeTableAsync(1),
-                    2 => _restaraunt.BookFreeTable(1),
-                    3 => await _restaraunt.UnsetBookingAsync(),
-                    4 => _restaraunt.UnsetBooking()
-                };
-
-                await _bus.Publish(new TableBooked(NewId.NextGuid(), NewId.NextGuid(), result ?? false, Dish.Pizza),stoppingToken);
+                await _bus.Publish((IBookingRequest) new BookingRequest(NewId.NextGuid(), NewId.NextGuid(), Dish.Pizza, DateTime.Now, choice),stoppingToken);
 
                 Console.WriteLine("Спасибо за Ваш заказ!");               
             }

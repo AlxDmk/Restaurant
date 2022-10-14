@@ -19,28 +19,15 @@ namespace Restaurant.Notification
             {
                 services.AddMassTransit(x =>
                 {
-                    x.AddConsumer<KitchenAccidentConsumer>();
-                    x.AddConsumer<TableBookedConsumer>();
-                    x.AddConsumer<KitchenReadyConsumer>();
-
-                    x.UsingRabbitMq((cxt, cfg) =>
-                    {
-                        cfg.Host("sparrow.rmq.cloudamqp.com", "yidbynwz", settings =>
-                        {
-                            settings.Username("yidbynwz");
-                            settings.Password("SZP0QrAVJ0rOGQ028Ou7fwP-xHgqJouA");
-
-                        });                   
+                    x.AddConsumer<NotifyConsumer>();
+                    x.UsingRabbitMq((cxt, cfg) =>                {
                         
-                       //TODO RetryPolicy
-
                         cfg.ConfigureEndpoints(cxt);
                     });
                 });
               
                 services.AddSingleton<Notifier>();                
-                services.AddMassTransitHostedService(true);
-                
+               
                 
             });
     }

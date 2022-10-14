@@ -14,20 +14,15 @@ namespace Restaurant.Kitchen
         private readonly IBus _bus;
      
 
-        public Manager(IBus bus)
-        {
+        public Manager(IBus bus) =>       
             _bus = bus;
-        }
+       
 
-        public void CheckKitchenReady(Guid orderId, Dish? dish)
-        {            
-            _bus.Publish<IKitchenReady>(new KitchenReady(orderId, true));
-            
-        }
-
-        public void CheckKitchenAccident(Dish dish)
-        {
-            _bus.Publish<IKitchenAccident>(new KitchenAccident(dish));
-        }
+        public bool CheckKitchenReady(Guid orderId, Guid clientId, Dish? dish) =>
+            true;
+        
+        public void CheckKitchenAccident(Dish dish) =>        
+            _bus.Publish((IKitchenAccident)new KitchenAccident(dish));
+        
     }
 }
