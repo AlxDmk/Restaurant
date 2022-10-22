@@ -1,8 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "0VQYOQVzZhWNOfAIHGY2GtuB0o09impgjZgvES4vMei8ZKRidn99KFbD9QCxON2EoPPIdefpQBCSLcIoow48zQ==",
+  "dgSpecHash": "HtPO+BJX6sQQ42g/VpKXzfnQ2LLdLN9gPtWwFdduuzxw5YQ0ZqMGWmJ8ZJad4BOnzyM5zIlVn9ks/WFa9fQYew==",
   "success": true,
   "projectFilePath": "C:\\dev\\MDA\\Restaurant\\Messaging\\Messaging.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\AlxDmk\\.nuget\\packages\\rabbitmq.client\\6.4.0\\rabbitmq.client.6.4.0.nupkg.sha512",
+    "C:\\Users\\AlxDmk\\.nuget\\packages\\system.memory\\4.5.4\\system.memory.4.5.4.nupkg.sha512",
+    "C:\\Users\\AlxDmk\\.nuget\\packages\\system.threading.channels\\4.7.1\\system.threading.channels.4.7.1.nupkg.sha512"
+  ],
   "logs": []
 }
