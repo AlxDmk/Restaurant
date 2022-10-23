@@ -21,7 +21,8 @@ namespace Restaurant.Notification
                 {
                     x.AddConsumer<NotifyConsumer>();
                     x.UsingRabbitMq((cxt, cfg) =>                {
-                        
+
+                        cfg.UseInMemoryOutbox();
                         cfg.ConfigureEndpoints(cxt);
                     });
                 });

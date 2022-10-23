@@ -16,6 +16,7 @@ namespace Restaurant.Booking
         public State AwaitingBookingApproved { get; private set; }
 
         public Event<IBookingRequest> BookingRequested { get; private set; }
+        public Event<Fault<IBookingRequest>> BookingRequestFault { get; private set; }
 
         public Event<ITableBooked> TableBooked { get; private set; }
 
@@ -34,6 +35,10 @@ namespace Restaurant.Booking
                 x.CorrelateById(context => context.Message.OrderId)
                 .SelectId(context => context.Message.OrderId));
 
+            Event(() => BookingRequestFault,
+                x =>
+                x.CorrelateById(context => context.Message.Message.OrderId));
+
             Event(() => TableBooked,
                 x =>
                 x.CorrelateById(context => context.Message.OrderId));
@@ -48,7 +53,7 @@ namespace Restaurant.Booking
             Schedule(() => BookingExpired, 
                 x => x.ExpirationId, x =>
                 {
-                    x.Delay = TimeSpan.FromSeconds(3);
+                    x.Delay = TimeSpan.FromSeconds(6);
                     x.Received = e => e.CorrelateById(context => context.Message.OrderId);
                 });
 
@@ -57,9 +62,9 @@ namespace Restaurant.Booking
                 .Publish(c => (INotify)new Notify(c.Message.OrderId, c.Message.ClientId, "Пришел запрос на заказ столика"))
                 .Then(context =>
                 {
-                    context.Instance.CorrelationId = context.Data.OrderId;
-                    context.Instance.OrderId = context.Data.OrderId;
-                    context.Instance.ClientId = context.Data.ClientId;
+                    context.Saga.CorrelationId = context.Message.OrderId;
+                    context.Saga.OrderId = context.Message.OrderId;
+                    context.Saga.ClientId = context.Message.ClientId;
 
                 })
                 .Schedule(BookingExpired, context => new BookingExpire(context.Saga))
@@ -72,15 +77,20 @@ namespace Restaurant.Booking
                 .Unschedule(BookingExpired)
                 .Publish(context =>
                 (INotify)new Notify(
-                    context.Instance.OrderId,
-                    context.Instance.ClientId,
+                    context.Saga.OrderId,
+                    context.Saga.ClientId,
                     $"Стол успешно забронирован"))
-                .Finalize());
+                .Finalize(),
 
-            During(AwaitingBookingApproved,
+                When(BookingRequestFault)
+                .Then(c => Console.WriteLine("Вышла ошибка"))
+                .Publish(c => (INotify)new Notify(c.Saga.OrderId, c.Saga.ClientId, $"[Exception]Стол забронировать не получится: {c.Message.Exceptions[0].Message}" ))
+                .Finalize(),
+
+            
                 When(BookingExpired?.Received)                
-                .Publish(context => (INotify)new Notify(context.Instance.OrderId,
-                    context.Instance.ClientId,
+                .Publish(context => (INotify)new Notify(context.Saga.OrderId,
+                    context.Saga.ClientId,
                     $"Заказ отменен"))
                 .Finalize()
                 );            

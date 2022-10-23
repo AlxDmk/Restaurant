@@ -25,7 +25,8 @@ namespace Restaurant.Kitchen.Consumers
             await Task.Delay(5000);
 
             if (_manager.CheckKitchenReady(context.Message.OrderId, context.Message.ClientId, context.Message.PreOrder))
-                await context.Publish<IKitchenReady>(new KitchenReady(context.Message.OrderId, true));            
+                await context.Publish<IKitchenReady>(new KitchenReady(context.Message.OrderId, true));
+            else throw new Exception($"На кухне не порядок, отсутствует {context.Message.PreOrder}") ;
             
         }        
     }
