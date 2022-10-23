@@ -19,6 +19,8 @@ namespace Restaurant.Booking
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            var i = 1;
+
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -30,9 +32,11 @@ namespace Restaurant.Booking
                     continue;
                 }        
 
-                await _bus.Publish((IBookingRequest) new BookingRequest(NewId.NextGuid(), NewId.NextGuid(), Dish.Pizza, DateTime.Now, choice),stoppingToken);
+                await _bus.Publish((IBookingRequest) new BookingRequest(NewId.NextGuid(), NewId.NextGuid(), i % 4 != 0 ? Dish.Pizza : Dish.Lasagna, DateTime.Now, choice),stoppingToken);
 
-                Console.WriteLine("Спасибо за Ваш заказ!");               
+                Console.WriteLine("Спасибо за Ваш заказ!");
+
+                i++;
             }
 
             //#region TIMER UNSET BOOKING

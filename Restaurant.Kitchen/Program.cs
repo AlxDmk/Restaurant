@@ -20,13 +20,13 @@ namespace Restaurant.Kitchen
                     
                     x.UsingRabbitMq((context, conf) =>
                     {
+                        conf.UseInMemoryOutbox();
                        conf.ConfigureEndpoints(context);
                     });
                     
                 });
 
-                services.AddSingleton<Manager>();
-                services.AddHostedService<Cook>();
+                services.AddSingleton<Manager>(); 
                 
 
                 

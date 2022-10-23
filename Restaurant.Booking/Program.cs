@@ -1,6 +1,8 @@
 ﻿using MassTransit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Restaurant.Booking.Consumers;
+using System.Runtime.CompilerServices;
 
 namespace Restaurant.Booking
 {
@@ -19,20 +21,33 @@ namespace Restaurant.Booking
             {
                 services.AddMassTransit(x =>
                 {
-                    //x.AddConsumer<BookingKitchenReadyConsumer>();
-                    x.UsingRabbitMq((context, conf) =>
-                    {
-                        conf.Host("sparrow.rmq.cloudamqp.com", "yidbynwz", settings =>
-                        {
-                            settings.Username("yidbynwz");
-                            settings.Password("SZP0QrAVJ0rOGQ028Ou7fwP-xHgqJouA");
+                    
+                    x.AddDelayedMessageScheduler();
 
-                        });
+                    x.AddConsumer<RestaurantBookingRequestConsumer>();                   
+                    x.AddConsumer<RestauranrBookingRequestFaultConsumer>();
+                   
+
+                    x.AddSagaStateMachine<RestaurantBookingSaga, RestaurantBooking>()                    
+                    .InMemoryRepository();
+                    
+
+                    x.UsingRabbitMq((context, conf) =>
+                    {                       
+                        conf.UseMessageRetry(r =>                        
+                            r.Incremental(3, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1)));                        
+
+                        conf.UseScheduledRedelivery(r
+                            => r.Intervals(TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(30)));
+
+                        conf.UseDelayedMessageScheduler();
+                        conf.UseInMemoryOutbox();
                         conf.ConfigureEndpoints(context);
                     });
                 });
 
-                services.AddMassTransitHostedService(true);
+                services.AddTransient<RestaurantBooking>();
+                services.AddTransient<RestaurantBookingSaga>();
 
                 services.AddTransient<Restaurant>();
 
